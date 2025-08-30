@@ -1,73 +1,137 @@
-# Welcome to your Lovable project
+# Login Practice Playground — OAuth + Chat + Billing
 
-## Project info
+This app is a learning playground for modern SaaS concepts:
 
-**URL**: https://lovable.dev/projects/6f3495b8-9012-442f-bdd4-d2d0a80f2839
+- Google OAuth via Supabase Auth
+- GPT assistant with streaming replies (local server)
+- Saved chat sessions/messages in Supabase
+- Stripe checkout, billing portal, and plan status
+- Pricing page, Profile, Settings, and Admin (dev) views
 
-## How can I edit this code?
+Stack: Vite + React + TypeScript, Tailwind + shadcn/ui, Supabase, Stripe, Express, Vitest.
 
-There are several ways of editing your application.
+## Quick start
 
-**Use Lovable**
+1) Install deps
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6f3495b8-9012-442f-bdd4-d2d0a80f2839) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
+```bash
 npm i
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+2) Configure env files (do NOT commit secrets)
+
+- Copy `.env.example` to `.env` and fill values (see Env Vars below)
+- Ensure `.env` and `.env.*` are ignored by Git (already configured)
+
+3) Run the assistant/billing server (uses server-side secrets)
+
+```bash
+npm run assistant
+```
+
+4) Run the frontend
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Features
 
-**Use GitHub Codespaces**
+- Google login via Supabase (redirects to `/chat`)
+- Chat UI with saved sessions and messages
+- Streaming assistant replies using OpenAI Chat Completions (SSE)
+- Pricing section with “Upgrade to Pro” via Stripe Checkout
+- Manage Billing via Stripe Billing Portal
+- Settings page with plan display and customer ID storage
+- Profile shows subscription plan
+- Admin (dev-only) lists billing_status rows
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Env Vars
 
-## What technologies are used for this project?
+Client (Vite — safe to expose in browser):
 
-This project is built with:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `VITE_APP_URL` (default `http://localhost:8080`)
+- `VITE_ASSISTANT_BASE_URL` (default `http://localhost:8787`)
+- `VITE_STRIPE_CUSTOMER_ID` (optional, convenience for portal)
+- `VITE_ADMIN_TOKEN` (dev-only; toggles Admin link)
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Server (assistant-server — never expose to client):
 
-## How can I deploy this project?
+- `OPENAI_API_KEY` (e.g., GPT model key)
+- `OPENAI_MODEL` (default `gpt-4o`)
+- `SUPABASE_URL` (or reuse `VITE_SUPABASE_URL`)
+- `SUPABASE_SERVICE_ROLE_KEY` (server-only)
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PRICE_ID` (or `STRIPE_PRICE_PRO`)
+- `STRIPE_SUCCESS_URL`, `STRIPE_CANCEL_URL`
+- `STRIPE_WEBHOOK_SECRET` (verifies incoming webhooks)
+- `STRIPE_DEFAULT_CUSTOMER_ID` (optional)
+- `ADMIN_TOKEN` (or `VITE_ADMIN_TOKEN`) for dev admin list endpoint
 
-Simply open [Lovable](https://lovable.dev/projects/6f3495b8-9012-442f-bdd4-d2d0a80f2839) and click on Share -> Publish.
+See:
+- `docs/SUPABASE_SETUP.md` for Google OAuth + chat tables + RLS
+- `docs/BILLING_SETUP.md` for `billing_status` table + policies + webhook
 
-## Can I connect a custom domain to my Lovable project?
+## Security and Git hygiene
 
-Yes, you can!
+- Secrets are loaded from `.env` at runtime and are ignored by Git:
+  - `.env`, `.env.*` are in `.gitignore`; `.env.example` is allowed
+- If you previously committed a secret file, rotate the key in the provider console and remove from history:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```bash
+git rm --cached .env
+git commit -m "Remove .env from repo"
+# Optional but recommended: rotate keys in OpenAI, Supabase, Stripe
+```
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+- Server-only keys used in `scripts/assistant-server.mjs`/`scripts/assistant-app.mjs` never appear in client bundles.
+- Avoid placing secrets under `src/` (client code) — use `VITE_*` only for non-sensitive config.
+
+## Routing and pages
+
+- `/` Landing (Hero, Features, CodeExample, Pricing)
+- `/chat` Protected chat
+- `/profile` Profile (name/email/avatar + plan)
+- `/settings` Billing actions and preferences
+- `/admin` Dev-only billing table view (requires `VITE_ADMIN_TOKEN`)
+
+## Development
+
+- Assistant server: `npm run assistant` (Express server at `http://localhost:8787`)
+  - Endpoints: `/api/assistant`, `/api/assistant/stream`, `/api/billing/*`
+  - Uses OpenAI and Stripe with server-side env vars
+- Frontend: `npm run dev` (Vite dev server at `http://localhost:8080`)
+  - Vite proxy forwards `/api/*` to assistant server in dev
+
+## Testing
+
+Run all tests:
+
+```bash
+npm test
+```
+
+Tests cover assistant logic, retry/streaming, billing client, assistant server endpoints (via supertest), pricing button behavior, and basic Supabase connectivity.
+
+## Stripe setup (summary)
+
+- Create a Product and a recurring Price in the Stripe Dashboard
+- Set `STRIPE_SECRET_KEY` and `STRIPE_PRICE_ID` in `.env`
+- Set success/cancel URLs
+- Configure webhook to `http://localhost:8787/api/billing/webhook` in dev
+
+## Supabase setup (summary)
+
+- Create project; enable Google provider
+- Create tables and RLS:
+  - `chat_sessions`, `messages` (see `docs/SUPABASE_SETUP.md`)
+  - `billing_status` (see `docs/BILLING_SETUP.md`)
+- Set keys in `.env`
+
+## Notes
+
+- This is a learning project; hardening (authn for admin endpoints, rate limiting, error boundaries, etc.) is left as next steps.
