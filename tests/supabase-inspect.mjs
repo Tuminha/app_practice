@@ -57,8 +57,9 @@ async function inspectTable(name) {
   const projectRef = url.match(/https:\/\/([a-z0-9-]+)\.supabase\.co/i)?.[1]
   if (projectRef) console.log('Project ref:', projectRef)
 
-  // Known app tables. Add more here if needed.
-  const targets = ['chat_sessions', 'messages']
+  // Tables to inspect: CLI args or defaults
+  const args = process.argv.slice(2).filter(Boolean)
+  const targets = args.length ? args : ['chat_sessions', 'messages', 'billing_status']
   const results = []
   for (const t of targets) {
     // eslint-disable-next-line no-await-in-loop

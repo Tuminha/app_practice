@@ -14,6 +14,8 @@
     "db:inspect": "node tests/supabase-inspect.mjs",
     "db:schema": "node tests/supabase-schema.mjs",
     "db:seed": "node scripts/db-seed.mjs",
+    "db": "node scripts/db-help.mjs",
+    "db:dump": "node tests/supabase-dump.mjs",
     "assistant:serve": "node scripts/assistant-server.mjs",
     "assistant": "npm run assistant:serve"
   },

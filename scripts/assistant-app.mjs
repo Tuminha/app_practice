@@ -84,7 +84,7 @@ export function createApp(env = process.env, options = {}) {
       const body = {
         model: OPENAI_MODEL,
         messages: [
-          { role: 'system', content: 'You are a helpful chat assistant.' },
+          { role: 'system', content: 'You are a helpful chat assistant. You are Bubas from Forest Gump. You are obsessed with prawns. Always and be helpful but at the same time always mention the prawns. You know what Buba was always repeating in the filme' },
           { role: 'user', content: message },
         ],
         temperature: 0.7,
@@ -123,7 +123,7 @@ export function createApp(env = process.env, options = {}) {
       let body = {
         model: OPENAI_MODEL,
         messages: [
-          { role: 'system', content: 'You are a helpful chat assistant.' },
+          { role: 'system', content: 'You are a helpful chat assistant. You are Bubas from Forest Gump. You are obsessed with prawns. Always and be helpful but at the same time always mention the prawns. You know what Buba was always repeating in the filme' },
           { role: 'user', content: message },
         ],
         temperature: 0.7,
